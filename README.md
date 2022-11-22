@@ -1,35 +1,46 @@
----
-title: "fastHierarchicalReg"
-author: "Michael Miller"
-date: "2022-11-22"
-output: github_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+fastHierarchicalReg
+================
+Michael Miller
+2022-11-22
 
 ## Overview
 
-fastHierarchicalReg provides functionality for estimating Bayesian hierarchical linear models (HLMs). Bayesian HLMs are very useful in applied statistics because the model learns the prior variance of the model parameters, which functions as a model regularizer, from the data rather than from cross validation (CV). This is critical from an inferential point of view as we can then use the resulting credible intervals to perform inference without having to perform CV for the regularization parameter in addition to calculating bootstrapped confidence intervals.
+fastHierarchicalReg provides functionality for estimating Bayesian
+hierarchical linear models (HLMs). Bayesian HLMs are very useful in
+applied statistics because the model learns the prior variance of the
+model parameters, which functions as a model regularizer, from the data
+rather than from cross validation (CV). This is critical from an
+inferential point of view as we can then use the resulting credible
+intervals to perform inference without having to perform CV for the
+regularization parameter in addition to calculating bootstrapped
+confidence intervals.
 
-The primary benchmark used in this package is HLM presented in the fastBayesReg repository hosted by KangJian2016. The speed of these implementations follows in part from pre-computing the SVD of the design matrix to obtain sufficient statistics for the conditional posterior distributions. This allows us to reduce the time complexity of each iteration to $O(p^2)$ in the number of model covariates rather than $O(p^3)$ required for the matrix inversion in the naive blocked Gibbs sampler. Implementing the blocked Gibbs sampler is critical because it drastically reduces the random walk behavior that Gibbs sampling exhibits for high dimensional problems. The functionality of this package includes:
+The primary benchmark used in this package is HLM presented in the
+fastBayesReg repository hosted by KangJian2016. The speed of these
+implementations follows in part from pre-computing the SVD of the design
+matrix to obtain sufficient statistics for the conditional posterior
+distributions. This allows us to reduce the time complexity of each
+iteration to $O(p^2)$ in the number of model covariates rather than
+$O(n^3)$ required for the matrix inversion in the naive blocked Gibbs
+sampler. Implementing the blocked Gibbs sampler is critical because it
+drastically reduces the random walk behavior that Gibbs sampling
+exhibits for high dimensional problems. The functionality of this
+package includes:
 
-* Parallel computing of the Markov chains using the foreach package
-* Efficient Gibbs sampler implementation in R
-* Calculation of Rhat convergence diagnostics for model parameters
-
+- Parallel computing of the Markov chains using the foreach package
+- Efficient Gibbs sampler implementation in R
+- Calculation of Rhat convergence diagnostics for model parameters
 
 ## Installation
 
-```{r, eval = FALSE}
+``` r
 library(devtools)
 devtools::install_github("mikemiller442/fastHierarchicalReg")
 ```
 
 ## Usage
 
-```{r, message = FALSE}
+``` r
 n <- 10000
 numBeta <- 5
 betaSD <- 0.75
@@ -75,13 +86,20 @@ res <- fastHierarchicalReg::linRegGibbsSampler(X = X,
                                                numEpochs = numEpochs,
                                                numDiscard = numDiscard,
                                                numChains = numChains)
+```
 
+    ## socket cluster with 15 nodes on host 'localhost'
+
+``` r
 resDF <- data.frame(betaTrue = beta,
                     betaHat = res$postMeanList$beta)
 knitr::kable(resDF)
 ```
 
-
-
-
-
+|   betaTrue |    betaHat |
+|-----------:|-----------:|
+|  0.4383008 |  0.4324272 |
+| -2.7539479 | -2.7291278 |
+| -0.6450843 | -0.6562668 |
+| -0.8626593 | -0.8390581 |
+| -1.4305159 | -1.4016366 |
