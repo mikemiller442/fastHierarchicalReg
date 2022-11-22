@@ -55,11 +55,11 @@ linRegGibbs <- function(X,testX,Y,testY,numEpochs,regVarPrior,lambdaSqPrior) {
     lambdaSqScaleBeta <- 1.0/lambdaSq[epoch] + lambdaSqPrior^(-2.0)
     lambdaSqScale[epoch + 1] <- 1.0/rgamma(1,lambdaSqScaleAlpha,lambdaSqScaleBeta)
     lambdaSqAlpha <- 0.5*(numWeights + 1.0)
-    lambdaSqBeta <- 0.5*(1.0/regVar[epoch])*sum(beta.col[,epoch+1] * beta.col[,epoch+1]) + (1.0/lambdaSqScale[epoch+1])
+    lambdaSqBeta <- 0.5*(1.0/regVar[epoch])*sum(beta[,epoch+1] * beta[,epoch+1]) + (1.0/lambdaSqScale[epoch+1])
     lambdaSq[epoch + 1] <- 1.0/rgamma(1,lambdaSqAlpha,lambdaSqBeta)
 
     # Sample regression variance
-    trainResiduals <- Y - features %*% beta.col[,epoch + 1]
+    trainResiduals <- Y - features %*% beta[,epoch + 1]
     regVarScaleAlpha <- 1.0
     regVarScaleBeta <- 1.0/regVar[epoch] + regVarPrior^(-2.0)
     regVarScale[epoch + 1] <- 1.0/rgamma(1,regVarScaleAlpha,regVarScaleBeta)
