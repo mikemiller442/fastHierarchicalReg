@@ -1,9 +1,15 @@
 library(Rcpp)
 library(RcppArmadillo)
+library(parallel)
 library(foreach)
+library(roxygen2)
 
-# Calculate Rhat
-
+#' Calculate Rhat Convergence Diagnostics From MCMC Output
+#'
+#' @param samples The number of samples in each chain.
+#' @param numChains The number of chains.
+#' @return Vector Of Rhat Convergence Diagnostics For Model Parameters.
+#' @examples
 Rhat <- function(samples,numChains) {
   n <- length(samples)/numChains
   si2 <- rep(NA,numChains)
@@ -56,8 +62,18 @@ Rhat <- function(samples,numChains) {
   return(Rhat)
 }
 
-# Define Gibbs Sampler
-
+#' Gibbs Sampling With Multiple MCMC Chains Running In Parallel
+#'
+#' @param X Design Matrix
+#' @param testX Design Matrix
+#' @param Y Outcome
+#' @param testY Outcome
+#' @param regVarPrior Scale hyperparameter for the Half-Cauchy prior for the regression variance.
+#' @param lambdaSqPrior Scale hyperparameter for the Half-Cauchy prior for the regression coefficient prior variance.
+#' @param numEpochs Number of epochs to run the Gibbs Sampler
+#' @param numDiscard Number of epochs to throw away as burn in
+#' @param numChains Number of MCMC chains to run
+#' @return List of posterior samples, posterior means, and Rhat criteria
 linRegGibbsSampler <- function(X,testX,Y,testY,
                                regVarPrior,lambdaSqPrior,
                                numEpochs,numDiscard,numChains) {

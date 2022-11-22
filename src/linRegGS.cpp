@@ -105,8 +105,23 @@ public:
   }
 };
 
+//' Linear Regression Gibbs Sampler
+//'
+//' Estimates the posterior distribution of a Hierarchical Linear Model.
+//' Places Half-Cauchy priors on the regression coefficient prior variance and the regression variance.
+//' Introduces auxiliary scale parameters in order to sample a Half Cauchy variable
+//' via sampling an inverse gamma - inverse gamma mixture using Gibbs sampling.
+//'
+//' @param X Design Matrix
+//' @param testX Design Matrix
+//' @param Y Outcome
+//' @param testY Outcome
+//' @param regVarPrior Scale hyperparameter for the Half-Cauchy prior for the regression variance.
+//' @param lambdaSqPrior Scale hyperparameter for the Half-Cauchy prior for the regression coefficient prior variance.
+//' @param x A numeric vector of values.
+//' @param left,right Boundary values.
+//' @export
 // [[Rcpp::export]]
-// Linear Regression Gibbs Sampler
 Rcpp::List linRegGibbs(NumericMatrix X, NumericMatrix testX, NumericVector Y, NumericVector testY,
                        int numEpochs, double regVarPrior, double lambdaSqPrior) {
 
