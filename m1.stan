@@ -5,16 +5,16 @@ data {
   matrix[N, K] X;  // design matrix
 }
 parameters {
-  vector[K] b;  // population-level effects
   real Intercept;  // temporary intercept for centered predictors
-  real<lower=0> sigma;  // dispersion parameter
+  vector[K] b;  // population-level effects
   real<lower=0> lambda;  // regression coefficient prior variance
+  real<lower=0> sigma;  // dispersion parameter
 }
 transformed parameters {
   real lprior = 0;  // prior contributions to the log posterior
+  lprior += normal_lpdf(Intercept | 0, 100.0);
   lprior += normal_lpdf(b | 0, sigma*lambda);
   lprior += student_t_lpdf(lambda | 1, 0, 1) - 1 * student_t_lccdf(0 | 1, 0, 1);
-  lprior += normal_lpdf(Intercept | 0, 100.0);
   lprior += student_t_lpdf(sigma | 1, 0, 1) - 1 * student_t_lccdf(0 | 1, 0, 1);
 }
 model {

@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Calculate Rhat
+### Calculate Rhat
 
 ```{r}
 Rhat <- function(samples,numChains) {
@@ -65,7 +65,7 @@ Rhat <- function(samples,numChains) {
 }
 ```
 
-# Define Gibbs Sampler
+### Define Gibbs Sampler
 
 ```{r}
 library(Rcpp)
@@ -95,7 +95,7 @@ linRegGibbsSampler <- function(X,testX,Y,testY,
   
   ### Run Markov Chains In Parallel
   resMat <- foreach(k = 1:numChains, .combine = "cbind", .packages = c("Rcpp","RcppArmadillo")) %dopar% {
-    sourceCpp("linRegGS.cpp")
+    sourceCpp("./../src/linRegGS.cpp")
     res <- linRegGibbs(X = X,
                        testX = testX,
                        Y = Y,
@@ -116,7 +116,7 @@ linRegGibbsSampler <- function(X,testX,Y,testY,
     samples
   }
   
-  print("calculating Rhat")
+  print("Finished sampling chains. Now calculating Rhat.")
 
   RhatIntercept <- Rhat(resMat[1,],numChains)
   RhatBeta <- rep(NA,ncol(X))
@@ -135,17 +135,25 @@ linRegGibbsSampler <- function(X,testX,Y,testY,
                    RhatRegVar = RhatRegVar,
                    RhatRegVarScale = RhatRegVarScale)
   
+  postMean <- rowMeans(resMat[,(numDiscard+2):ncol(resMat)])
+  postMeanList <- list(intercept = as.numeric(postMean[1]),
+                       beta = as.numeric(postMean[2:(ncol(X)+1)]),
+                       lambdaSq = as.numeric(postMean[ncol(X)+2]),
+                       lambdaSqScale = as.numeric(postMean[ncol(X)+3]),
+                       regVar = as.numeric(postMean[ncol(X)+4]),
+                       regVarScale = as.numeric(postMean[ncol(X)+5]))
+  
   return(list(resMat = resMat,
-              postMean = rowMeans(resMat[,(numDiscard+2):(numEpochs+1)]),
+              postMeanList = postMeanList,
               RhatList = RhatList))
 }
 ```
 
-# Simulate Data
+### Simulate Data 1
 
 ```{r}
-n <- 4000
-numBeta <- 20
+n <- 10000
+numBeta <- 100
 betaSD <- 0.75
 XSD <- 0.5
 errorSD <- 2.0
@@ -160,7 +168,7 @@ y <- Z %*% beta + e
 output <- y - mean(y)
 ```
 
-# Run Gibbs Sampler
+### Run Gibbs Sampler
 
 ```{r}
 X <- Z
@@ -168,7 +176,7 @@ testX <- Z
 resp <- output
 testResp <- output
 
-numEpochs <- 4000
+numEpochs <- 10000
 numDiscard <- 2000
 numChains <- 4
 lambdaSqPrior <- 1.0
@@ -185,36 +193,28 @@ res <- linRegGibbsSampler(X = X,
                           numChains = numChains)
 ```
 
-# Compare to Stan
+### Compare means between model output to true values
 
 ```{r}
-library(rstan)
-options(mc.cores = parallel::detectCores())
-stanData <- list(N = nrow(X),
-                 Y = as.numeric(output),
-                 K = ncol(X),
-                 X = X)
+# Comparing beta
+paramBeta <- as.numeric(res$postMeanList$beta)
+all.equal(beta,paramBeta)
 
-m1 <- stan(file = "m1.stan",
-           data = stanData,
-           warmup = 1000, 
-           iter = 2000,
-           control = list(adapt_delta = 0.95),
-           chains = 4, 
-           cores = 8)
+# Comparing lambda
+paramLambda <- sqrt(as.numeric(res$postMeanList$lambdaSq))
+all.equal(betaSD,paramLambda)
 
-model1 <- data.matrix(m1)
+# Comparing sigma
+paramSigma <- sqrt(as.numeric(res$postMeanList$regVar))
+all.equal(errorSD,paramSigma)
 ```
 
-
-# High Dimensional Example
-
-# Simulate Data
+### Simulate Data 2
 
 ```{r}
-n <- 4000
-numBeta <- 3000
-betaSD <- 0.05
+n <- 10000
+numBeta <- 5
+betaSD <- 0.75
 XSD <- 0.5
 errorSD <- 2.0
 e <- rnorm(n, mean = 0, sd = errorSD)
@@ -228,34 +228,32 @@ y <- Z %*% beta + e
 output <- y - mean(y)
 ```
 
-# Run Gibbs Sampler
+### Run Gibbs Sampler
 
 ```{r}
-library(Rcpp)
-library(RcppArmadillo)
-library(foreach)
-sourceCpp("linRegGS.cpp")
-
 X <- Z
 testX <- Z
 resp <- output
 testResp <- output
 
-numEpochs <- 4000
+numEpochs <- 10000
 numDiscard <- 2000
+numChains <- 4
 lambdaSqPrior <- 1.0
 regVarPrior <- 1.0
 
-res <- linRegGibbs(X = X,
-                   testX = testX,
-                   Y = output,
-                   testY = output,
-                   numEpochs = numEpochs,
-                   regVarPrior = regVarPrior,
-                   lambdaSqPrior = lambdaSqPrior)
+res <- linRegGibbsSampler(X = X,
+                          testX = testX,
+                          Y = output,
+                          testY = output,
+                          regVarPrior = regVarPrior,
+                          lambdaSqPrior = lambdaSqPrior,
+                          numEpochs = numEpochs,
+                          numDiscard = numDiscard,
+                          numChains = numChains)
 ```
 
-# Compare to Stan
+### Fit the same model in Stan
 
 ```{r}
 library(rstan)
@@ -265,16 +263,147 @@ stanData <- list(N = nrow(X),
                  K = ncol(X),
                  X = X)
 
-m1 <- stan(file = "m1.stan",
+m1 <- stan(file = "./../m1.stan",
            data = stanData,
            warmup = 1000, 
-           iter = 2000,
+           iter = 5000,
            control = list(adapt_delta = 0.95),
-           chains = 1, 
+           chains = 4, 
            cores = 8)
 
 model1 <- data.matrix(m1)
 ```
+
+### Compare means between model output and Stan
+
+```{r}
+# Comparing intercept
+stanIntercept <- as.numeric(mean(model1[,1]))
+paramIntercept <- as.numeric(res$postMeanList$intercept)
+all.equal(stanIntercept,stanIntercept)
+
+# Comparing beta
+stanBeta <- as.numeric(colMeans(model1[,2:(ncol(X)+1)]))
+paramBeta <- as.numeric(res$postMeanList$beta)
+all.equal(stanBeta,paramBeta)
+
+# Comparing lambda
+stanLambda <- as.numeric(mean(model1[,ncol(X)+2]))
+paramLambda <- sqrt(as.numeric(res$postMeanList$lambdaSq))
+all.equal(stanLambda,paramLambda)
+
+# Comparing sigma
+stanSigma <- as.numeric(mean(model1[,ncol(X)+3]))
+paramSigma <- sqrt(as.numeric(res$postMeanList$regVar))
+all.equal(stanSigma,paramSigma)
+```
+
+### Compare covariance between model output and Stan
+
+```{r}
+# Comparing intercept + beta
+stanBetaCov <- as.numeric(cov(model1[,1:(ncol(X)+1)]))
+paramBetaCov <- as.numeric(cov(t(res$resMat[1:(ncol(X)+1),])))
+all.equal(stanBetaCov,paramBetaCov)
+
+# Comparing lambda
+stanLambdaCov <- as.numeric(var(model1[,ncol(X)+2]))
+paramLambdaCov <- as.numeric(var(sqrt(res$resMat[ncol(X)+2,])))
+all.equal(stanLambdaCov,paramLambdaCov)
+
+# Comparing sigma
+stanSigmaCov <- as.numeric(var(model1[,ncol(X)+3]))
+paramSigmaCov <- as.numeric(var(sqrt(res$resMat[ncol(X)+4,])))
+all.equal(stanSigmaCov,paramSigmaCov)
+```
+
+### Rhat Convergence Diagnostic - Check Convergence to 1.0
+
+```{r}
+print(unlist(res$RhatList))
+all.equal(as.numeric(unlist(res$RhatList)),rep(1.0,length(unlist(res$RhatList))))
+```
+
+
+### Benchmark High Dimensional Example
+
+```{r}
+library(bench)
+
+n <- 5000
+numBeta <- 500
+betaSD <- 0.05
+XSD <- 0.5
+errorSD <- 2.0
+e <- rnorm(n, mean = 0, sd = errorSD)
+beta <- rnorm(numBeta, mean = 0, sd = betaSD*errorSD)
+Z <- matrix(NA, nrow = n, ncol = numBeta)
+for (i in 1:ncol(Z)) {
+  Z[,i] <- rnorm(n, mean = 0, sd = XSD)
+}
+
+y <- Z %*% beta + e
+output <- y - mean(y)
+
+funMod <- function() {
+  X <- Z
+  testX <- Z
+  resp <- output
+  testResp <- output
+  
+  numEpochs <- 4000
+  numDiscard <- 2000
+  numChains <- 2
+  lambdaSqPrior <- 1.0
+  regVarPrior <- 1.0
+  
+  res <- linRegGibbsSampler(X = X,
+                            testX = testX,
+                            Y = output,
+                            testY = output,
+                            regVarPrior = regVarPrior,
+                            lambdaSqPrior = lambdaSqPrior,
+                            numEpochs = numEpochs,
+                            numDiscard = numDiscard,
+                            numChains = numChains)
+  paramIntercept <- as.numeric(res$postMeanList$intercept)
+  return(paramIntercept)
+}
+
+funStan <- function() {
+  options(mc.cores = parallel::detectCores())
+  
+  X <- Z
+  testX <- Z
+  stanData <- list(N = nrow(X),
+                   Y = as.numeric(output),
+                   K = ncol(X),
+                   X = X)
+  
+  m1 <- stan(file = "./../m1.stan",
+             data = stanData,
+             warmup = 1000, 
+             iter = 2000,
+             control = list(adapt_delta = 0.95),
+             chains = 2,
+             cores = 8)
+  
+  model1 <- data.matrix(m1)
+  stanIntercept <- as.numeric(mean(model1[,1]))
+  return(stanIntercept)
+}
+
+benchMarkRes <- bench::mark(funMod(),
+                            funStan(),
+                            iterations = 2,
+                            check = FALSE)
+benchMarkTable <- benchMarkRes[c("expression", "min", "median","mem_alloc","n_gc")]
+knitr::kable(benchMarkTable)
+```
+
+
+
+
 
 
 
