@@ -175,44 +175,38 @@ linRegGibbsSampler <- function(X,testX,Y,testY,
                        regVarPrior = regVarPrior,
                        lambdaSqPrior = lambdaSqPrior)
 
-    postIntercept <- res$intercept[,(numDiscard+2):(numEpochs+1)]
     postBeta <- res$coefBeta[,(numDiscard+2):(numEpochs+1)]
     postLambdaSq <- res$lambdaSq[(numDiscard+2):(numEpochs+1)]
     postLambdaSqScale <- res$lambdaSqScale[(numDiscard+2):(numEpochs+1)]
     postRegVar <- res$regVar[(numDiscard+2):(numEpochs+1)]
     postRegVarScale <- res$regVarScale[(numDiscard+2):(numEpochs+1)]
 
-    samples <- rbind(postIntercept,postBeta,postLambdaSq,postLambdaSqScale,
+    samples <- rbind(postBeta,postLambdaSq,postLambdaSqScale,
                      postRegVar,postRegVarScale)
     samples
   }
 
-  print("Finished sampling chains. Now calculating Rhat.")
-
-  RhatIntercept <- Rhat(resMat[1,],numChains)
   RhatBeta <- rep(NA,ncol(X))
   for (i in 1:ncol(X)) {
-    RhatBeta[i] <- Rhat(resMat[1+i,],numChains)
+    RhatBeta[i] <- Rhat(resMat[i,],numChains)
   }
-  RhatLambdaSq <- Rhat(resMat[ncol(X)+2,],numChains)
-  RhatLambdaSqScale <- Rhat(resMat[ncol(X)+3,],numChains)
-  RhatRegVar <- Rhat(resMat[ncol(X)+4,],numChains)
-  RhatRegVarScale <- Rhat(resMat[ncol(X)+5,],numChains)
+  RhatLambdaSq <- Rhat(resMat[ncol(X)+1,],numChains)
+  RhatLambdaSqScale <- Rhat(resMat[ncol(X)+2,],numChains)
+  RhatRegVar <- Rhat(resMat[ncol(X)+3,],numChains)
+  RhatRegVarScale <- Rhat(resMat[ncol(X)+4,],numChains)
 
-  RhatList <- list(RhatIntercept = RhatIntercept,
-                   RhatBeta = RhatBeta,
+  RhatList <- list(RhatBeta = RhatBeta,
                    RhatLambdaSq = RhatLambdaSq,
                    RhatLambdaSqScale = RhatLambdaSqScale,
                    RhatRegVar = RhatRegVar,
                    RhatRegVarScale = RhatRegVarScale)
 
   postMean <- rowMeans(resMat[,(numDiscard+2):ncol(resMat)])
-  postMeanList <- list(intercept = as.numeric(postMean[1]),
-                       beta = as.numeric(postMean[2:(ncol(X)+1)]),
-                       lambdaSq = as.numeric(postMean[ncol(X)+2]),
-                       lambdaSqScale = as.numeric(postMean[ncol(X)+3]),
-                       regVar = as.numeric(postMean[ncol(X)+4]),
-                       regVarScale = as.numeric(postMean[ncol(X)+5]))
+  postMeanList <- list(beta = as.numeric(postMean[1:ncol(X)]),
+                       lambdaSq = as.numeric(postMean[ncol(X)+1]),
+                       lambdaSqScale = as.numeric(postMean[ncol(X)+2]),
+                       regVar = as.numeric(postMean[ncol(X)+3]),
+                       regVarScale = as.numeric(postMean[ncol(X)+4]))
 
   return(list(resMat = resMat,
               postMeanList = postMeanList,
