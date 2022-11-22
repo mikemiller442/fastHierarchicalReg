@@ -12,9 +12,15 @@
 #' @param regVarPrior Scale hyperparameter for the Half-Cauchy prior for the regression variance.
 #' @param lambdaSqPrior Scale hyperparameter for the Half-Cauchy prior for the regression coefficient prior variance.
 #' @param numEpochs Number of epochs to run the Gibbs Sampler
-#' @param numDiscard Number of epochs to throw away as burn in
-#' @return List of posterior samples
-linRegGibbs <- function(X,testX,Y,testY,numEpochs,regVarPrior,lambdaSqPrior) {
+#' @return a list object consisting of five components
+#' \describe{
+#' \item{coefBeta}{a \eqn{p \times E} matrix of posterior samples for \eqn{p} the regression coefficientsm where \eqn{E} is the number of samples}
+#' \item{lambdaSqScale}{vector of posterior samples for the auxiliary scale variable for the regression coefficient prior variance}
+#' \item{lambdaSq}{vector of posterior samples for the regression coefficient prior variance}
+#' \item{regVarScale}{vector of posterior samples for the auxiliary scale variable for the regression variance}
+#' \item{regVar}{vector of posterior samples for the regression variance}
+#' }
+linRegGibbs <- function(X,testX,Y,testY,regVarPrior,lambdaSqPrior,numEpochs) {
 
   # Initialize Markov Chain And Compute Sufficient Statistics
   n <- length(Y)
@@ -75,7 +81,7 @@ linRegGibbs <- function(X,testX,Y,testY,numEpochs,regVarPrior,lambdaSqPrior) {
 #'
 #' @param samples The number of samples in each chain.
 #' @param numChains The number of chains.
-#' @return Vector Of Rhat Convergence Diagnostics For Model Parameters.
+#' @return Rhat Convergence Diagnostics For A Single Model Parameter.
 Rhat <- function(samples,numChains) {
   n <- length(samples)/numChains
   si2 <- rep(NA,numChains)
@@ -134,21 +140,26 @@ Rhat <- function(samples,numChains) {
 #' @param testX Design Matrix
 #' @param Y Outcome
 #' @param testY Outcome
-#' @param regVarPrior Scale hyperparameter for the Half-Cauchy prior for the regression variance.
 #' @param lambdaSqPrior Scale hyperparameter for the Half-Cauchy prior for the regression coefficient prior variance.
+#' @param regVarPrior Scale hyperparameter for the Half-Cauchy prior for the regression variance.
 #' @param numEpochs Number of epochs to run the Gibbs Sampler
 #' @param numDiscard Number of epochs to throw away as burn in
 #' @param numChains Number of MCMC chains to run
-#' @return List of posterior samples, posterior means, and Rhat criteria
+#' @return a list object consisting of three components
+#' \describe{
+#' \item{resMat}{matrix of posterior samples. Rows correspond to model parameters.}
+#' \item{postMeanList}{vector of posterior means}
+#' \item{RhatList}{vector of Rhat diagnostics}
+#' }
 linRegGibbsProcessed <- function(X,testX,Y,testY,
-                                 regVarPrior,lambdaSqPrior,
-                                 numEpochs,numDiscard,numChains) {
+                                 lambdaSqPrior,regVarPrior,
+                                 numEpochs,numDiscard,numChains,numCores) {
 
   library(parallel)
   library(foreach)
 
   ### Parallel Setup
-  n.cores <- parallel::detectCores() - 1
+  n.cores <- numCores
   #create the cluster
   my.cluster <- parallel::makeCluster(n.cores,type = "PSOCK")
 

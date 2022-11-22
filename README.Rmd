@@ -54,6 +54,7 @@ testResp <- output
 numEpochs <- 10000
 numDiscard <- 2000
 numChains <- 4
+numCores <- 8
 lambdaSqPrior <- 1.0
 regVarPrior <- 1.0
 
@@ -75,7 +76,8 @@ res <- fastHierarchicalReg::linRegGibbsProcessed(X = X,
                                                  lambdaSqPrior = lambdaSqPrior,
                                                  numEpochs = numEpochs,
                                                  numDiscard = numDiscard,
-                                                 numChains = numChains)
+                                                 numChains = numChains,
+                                                 numCores = numCores)
 
 # Compare true beta values to the posterior means
 resDF <- data.frame(betaTrue = beta,
