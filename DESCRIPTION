@@ -12,7 +12,13 @@ Depends:
     R
 Imports: 
     Rcpp,
-    RcppArmadillo
+    RcppArmadillo,
+    parallel,
+    foreach,
+    roxygen2,
+    rstan,
+    bench,
+    devtools
 LinkingTo:
     Rcpp,
     RcppArmadillo
