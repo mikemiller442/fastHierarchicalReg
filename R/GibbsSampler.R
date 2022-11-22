@@ -1,8 +1,79 @@
-library(Rcpp)
-library(RcppArmadillo)
 library(parallel)
 library(foreach)
 library(roxygen2)
+
+#' Linear Regression Gibbs Sampler
+#'
+#' Estimates the posterior distribution of a Hierarchical Linear Model.
+#' Places Half-Cauchy priors on the regression coefficient prior variance and the regression variance.
+#' Introduces auxiliary scale parameters in order to sample a Half Cauchy variable
+#' via sampling an inverse gamma - inverse gamma mixture using Gibbs sampling.
+#'
+#' @param X Design Matrix
+#' @param testX Design Matrix
+#' @param Y Outcome
+#' @param testY Outcome
+#' @param regVarPrior Scale hyperparameter for the Half-Cauchy prior for the regression variance.
+#' @param lambdaSqPrior Scale hyperparameter for the Half-Cauchy prior for the regression coefficient prior variance.
+#' @param numEpochs Number of epochs to run the Gibbs Sampler
+#' @param numDiscard Number of epochs to throw away as burn in
+#' @return List of posterior samples
+linRegGibbs <- function(X,testX,Y,testY,numEpochs,regVarPrior,lambdaSqPrior) {
+
+  # Initialize Markov Chain And Compute Sufficient Statistics
+  n <- length(Y)
+  numWeights <- ncol(X)
+  beta <- matrix(0.0, nrow = numWeights, ncol = numEpochs + 1)
+  svdRes <- svd(X, nu = nrow(X), nv = ncol(X))
+  U <- svdRes$u
+  D <- svdRes$d
+  V <- svdRes$v
+  tV <- t(svdRes$v)
+  Zdiag <- rep(0.0, ncol(X))
+  if (ncol(X) > nrow(X)) {
+    D <- c(D, rep(0.0,ncol(X) - nrow(X)))
+  }
+  lambdaSqScale <- rep(0.0,numEpochs + 1)
+  lambdaSqScale[1] <- 1.0
+  lambdaSq <- rep(0.0,numEpochs + 1)
+  lambdaSq[1] <- 1.0/numWeights
+
+  regVarScale <- rep(0.0,numEpochs + 1)
+  regVarScale[1] <- 1.0
+  regVar <- rep(0.0,numEpochs + 1)
+  regVar[1] <- 1.0
+
+  # Run Markov Chain
+  for (epoch in 1:(numEpochs)) {
+    # Sample regression coefficients
+    Zdiag <- (1.0/regVar[epoch]*D^2.0 + (1.0/regVar(epoch))*(1.0/lambdaSq[epoch]))^(-1.0)
+    evBeta <- (1.0/mod.regVar[epoch])*(V %*% (diag(Zdiag) %*% (tV %*% (t(X) %*% Y))))
+    beta[,epoch+1] <- evBeta + V %*% (sqrt(Zdiag) * rnorm(numWeights))
+
+    # Sample global shrinkage parameter
+    lambdaSqScaleAlpha <- 1.0
+    lambdaSqScaleBeta <- 1.0/lambdaSq[epoch] + lambdaSqPrior^(-2.0)
+    lambdaSqScale[epoch + 1] <- 1.0/rgamma(1,lambdaSqScaleAlpha,lambdaSqScaleBeta)
+    mod.featHP.lambdaSqAlpha <- 0.5*(numWeights + 1.0)
+    mod.featHP.lambdaSqBeta <- 0.5*(1.0/mod.regVar[epoch])*sum(beta.col[,epoch+1] * beta.col[,epoch+1]) + (1.0/lambdaSqScale[epoch+1])
+    lambdaSq[epoch + 1] <- 1.0/rgamma(1,lambdaSqAlpha,lambdaSqBeta)
+
+    # Sample regression variance
+    trainResiduals <- mod.Y - features %*% beta.col[,epoch + 1]
+    regVarScaleAlpha <- 1.0
+    regVarScaleBeta <- 1.0/mod.regVar[epoch] + regVarPrior^(-2.0)
+    regVarScale[epoch + 1] <- 1.0/rgamma(1,regVarScaleAlpha,regVarScaleBeta)
+    regVarAlpha <- 0.5*(n + numWeights + 1.0)
+    regVarBeta <- 1.0/regVarScale[epoch+1] + 0.5*sum(trainResiduals*trainResiduals) + 0.5*(1.0/lambdaSq[epoch+1])*sum(beta[,epoch+1] * beta[,epoch+1])
+    regVar[epoch + 1] <-1.0/rgamma(1,regVarAlpha,regVarBeta)
+  }
+
+  return(list(coefBeta = beta,
+              lambdaSqScale = lambdaSqScale,
+              lambdaSq = lambdaSq,
+              regVarScale = regVarScale,
+              regVar = regVar))
+}
 
 #' Calculate Rhat Convergence Diagnostics From MCMC Output
 #'
@@ -96,8 +167,7 @@ linRegGibbsSampler <- function(X,testX,Y,testY,
   foreach::getDoParWorkers()
 
   ### Run Markov Chains In Parallel
-  resMat <- foreach(k = 1:numChains, .combine = "cbind", .packages = c("Rcpp","RcppArmadillo")) %dopar% {
-    sourceCpp("./../src/linRegGS.cpp")
+  resMat <- foreach(k = 1:numChains, .combine = "cbind") %dopar% {
     res <- linRegGibbs(X = X,
                        testX = testX,
                        Y = Y,
