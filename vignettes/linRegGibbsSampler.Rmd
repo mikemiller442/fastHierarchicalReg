@@ -17,8 +17,12 @@ library(RcppArmadillo)
 library(parallel)
 library(foreach)
 library(roxygen2)
-library(rstan)
+# library(rstan)
 library(bench)
+```
+```{r}
+source("./../R/regDiagnostics.R")
+sourceCpp("./../src/linRegGS.cpp")
 ```
 
 
@@ -129,21 +133,21 @@ res <- linRegGibbsSampler(X = X,
 ### Fit the same model in Stan
 
 ```{r}
-options(mc.cores = parallel::detectCores())
-stanData <- list(N = nrow(X),
-                 Y = as.numeric(output),
-                 K = ncol(X),
-                 X = X)
-
-m1 <- stan(file = "./../m1.stan",
-           data = stanData,
-           warmup = 1000, 
-           iter = 5000,
-           control = list(adapt_delta = 0.95),
-           chains = 4, 
-           cores = 8)
-
-model1 <- data.matrix(m1)
+# options(mc.cores = parallel::detectCores())
+# stanData <- list(N = nrow(X),
+#                  Y = as.numeric(output),
+#                  K = ncol(X),
+#                  X = X)
+# 
+# m1 <- stan(file = "./../m1.stan",
+#            data = stanData,
+#            warmup = 1000,
+#            iter = 5000,
+#            control = list(adapt_delta = 0.95),
+#            chains = 4, 
+#            cores = 8)
+# 
+# model1 <- data.matrix(m1)
 ```
 
 ### Compare means between model output and Stan
@@ -240,35 +244,35 @@ funMod <- function() {
   return(paramIntercept)
 }
 
-funStan <- function() {
-  options(mc.cores = parallel::detectCores())
-  
-  X <- Z
-  testX <- Z
-  stanData <- list(N = nrow(X),
-                   Y = as.numeric(output),
-                   K = ncol(X),
-                   X = X)
-  
-  m1 <- stan(file = "./../m1.stan",
-             data = stanData,
-             warmup = 1000, 
-             iter = 2000,
-             control = list(adapt_delta = 0.95),
-             chains = 2,
-             cores = 8)
-  
-  model1 <- data.matrix(m1)
-  stanIntercept <- as.numeric(mean(model1[,1]))
-  return(stanIntercept)
-}
-
-benchMarkRes <- bench::mark(funMod(),
-                            funStan(),
-                            iterations = 2,
-                            check = FALSE)
-benchMarkTable <- benchMarkRes[c("expression", "min", "median","mem_alloc","n_gc")]
-knitr::kable(benchMarkTable)
+# funStan <- function() {
+#   options(mc.cores = parallel::detectCores())
+#   
+#   X <- Z
+#   testX <- Z
+#   stanData <- list(N = nrow(X),
+#                    Y = as.numeric(output),
+#                    K = ncol(X),
+#                    X = X)
+#   
+#   m1 <- stan(file = "./../m1.stan",
+#              data = stanData,
+#              warmup = 1000, 
+#              iter = 2000,
+#              control = list(adapt_delta = 0.95),
+#              chains = 2,
+#              cores = 8)
+#   
+#   model1 <- data.matrix(m1)
+#   stanIntercept <- as.numeric(mean(model1[,1]))
+#   return(stanIntercept)
+# }
+# 
+# benchMarkRes <- bench::mark(funMod(),
+#                             funStan(),
+#                             iterations = 2,
+#                             check = FALSE)
+# benchMarkTable <- benchMarkRes[c("expression", "min", "median","mem_alloc","n_gc")]
+# knitr::kable(benchMarkTable)
 ```
 
 
