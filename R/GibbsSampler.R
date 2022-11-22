@@ -46,7 +46,7 @@ linRegGibbs <- function(X,testX,Y,testY,numEpochs,regVarPrior,lambdaSqPrior) {
   # Run Markov Chain
   for (epoch in 1:(numEpochs)) {
     # Sample regression coefficients
-    Zdiag <- (1.0/regVar[epoch]*D^2.0 + (1.0/regVar(epoch))*(1.0/lambdaSq[epoch]))^(-1.0)
+    Zdiag <- (1.0/regVar[epoch]*D^2.0 + (1.0/regVar[epoch])*(1.0/lambdaSq[epoch]))^(-1.0)
     evBeta <- (1.0/mod.regVar[epoch])*(V %*% (diag(Zdiag) %*% (tV %*% (t(X) %*% Y))))
     beta[,epoch+1] <- evBeta + V %*% (sqrt(Zdiag) * rnorm(numWeights))
 

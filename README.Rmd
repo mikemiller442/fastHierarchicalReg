@@ -45,11 +45,22 @@ for (i in 1:ncol(Z)) {
 y <- Z %*% beta + e
 output <- y - mean(y)
 
+X <- Z
+testX <- Z
+resp <- output
+testResp <- output
+
+numEpochs <- 10000
+numDiscard <- 2000
+numChains <- 4
+lambdaSqPrior <- 1.0
+regVarPrior <- 1.0
+
 # Call C++ Function Directly For A Single Chain
 res <- linRegGibbs(X = X,
                    testX = testX,
-                   Y = Y,
-                   testY = testY,
+                   Y = resp,
+                   testY = testResp,
                    numEpochs = numEpochs,
                    regVarPrior = regVarPrior,
                    lambdaSqPrior = lambdaSqPrior)
@@ -57,8 +68,8 @@ res <- linRegGibbs(X = X,
 # Call R Function To Parallel Compute Multiple Chains Using Foreach
 res <- linRegGibbsSampler(X = X,
                           testX = testX,
-                          Y = output,
-                          testY = output,
+                          Y = resp,
+                          testY = testResp,
                           regVarPrior = regVarPrior,
                           lambdaSqPrior = lambdaSqPrior,
                           numEpochs = numEpochs,
