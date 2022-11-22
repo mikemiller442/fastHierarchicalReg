@@ -1,6 +1,6 @@
 Package: fastHierarchicalReg
 Type: Package
-Title: Fast Estimation Of Hierarchical Linear Regression Models Using Parallel Computing and Rcpp
+Title: Fast Estimation Of Hierarchical Linear Regression Models Using Parallel Computing And Rcpp
 Version: 0.1.0
 Author: Michael Miller
 Maintainer: Michael Miller <rmmill@umich.edu>
