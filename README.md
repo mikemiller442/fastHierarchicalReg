@@ -78,15 +78,15 @@ res <- fastHierarchicalReg::linRegGibbs(X = X,
                                         lambdaSqPrior = lambdaSqPrior)
 
 # Call R Function To Compute Multiple Chains In Parallel
-res <- fastHierarchicalReg::linRegGibbsSampler(X = X,
-                                               testX = testX,
-                                               Y = resp,
-                                               testY = testResp,
-                                               regVarPrior = regVarPrior,
-                                               lambdaSqPrior = lambdaSqPrior,
-                                               numEpochs = numEpochs,
-                                               numDiscard = numDiscard,
-                                               numChains = numChains)
+res <- fastHierarchicalReg::linRegGibbsProcessed(X = X,
+                                                 testX = testX,
+                                                 Y = resp,
+                                                 testY = testResp,
+                                                 regVarPrior = regVarPrior,
+                                                 lambdaSqPrior = lambdaSqPrior,
+                                                 numEpochs = numEpochs,
+                                                 numDiscard = numDiscard,
+                                                 numChains = numChains)
 ```
 
     ## socket cluster with 15 nodes on host 'localhost'
@@ -100,8 +100,8 @@ knitr::kable(resDF)
 
 |   betaTrue |    betaHat |
 |-----------:|-----------:|
-| -3.4491918 | -3.4421431 |
-| -1.3283198 | -1.3133284 |
-| -0.2653254 | -0.2608867 |
-|  2.5677206 |  2.6069016 |
-|  1.3268278 |  1.3802128 |
+| -0.5015187 | -0.4952341 |
+|  2.6450968 |  2.6266106 |
+|  1.1628592 |  1.1481380 |
+| -0.4703497 | -0.4305501 |
+|  1.2252963 |  1.2130184 |
