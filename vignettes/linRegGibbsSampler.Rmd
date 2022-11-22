@@ -12,6 +12,11 @@ knitr::opts_chunk$set(echo = TRUE)
 ### Load Libraries
 
 ```{r}
+library(Rcpp)
+library(RcppArmadillo)
+library(parallel)
+library(foreach)
+library(roxygen2)
 library(rstan)
 library(bench)
 ```
