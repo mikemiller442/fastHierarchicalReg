@@ -56,15 +56,15 @@ numChains <- 4
 lambdaSqPrior <- 1.0
 regVarPrior <- 1.0
 
-res <- linRegGibbsSampler(X = X,
-                          testX = testX,
-                          Y = output,
-                          testY = output,
-                          regVarPrior = regVarPrior,
-                          lambdaSqPrior = lambdaSqPrior,
-                          numEpochs = numEpochs,
-                          numDiscard = numDiscard,
-                          numChains = numChains)
+res <- linRegGibbsProcessed(X = X,
+                            testX = testX,
+                            Y = output,
+                            testY = output,
+                            regVarPrior = regVarPrior,
+                            lambdaSqPrior = lambdaSqPrior,
+                            numEpochs = numEpochs,
+                            numDiscard = numDiscard,
+                            numChains = numChains)
 ```
 
 ### Compare means between model output to true values
@@ -116,15 +116,15 @@ numChains <- 4
 lambdaSqPrior <- 1.0
 regVarPrior <- 1.0
 
-res <- linRegGibbsSampler(X = X,
-                          testX = testX,
-                          Y = output,
-                          testY = output,
-                          regVarPrior = regVarPrior,
-                          lambdaSqPrior = lambdaSqPrior,
-                          numEpochs = numEpochs,
-                          numDiscard = numDiscard,
-                          numChains = numChains)
+res <- linRegGibbsProcessed(X = X,
+                            testX = testX,
+                            Y = output,
+                            testY = output,
+                            regVarPrior = regVarPrior,
+                            lambdaSqPrior = lambdaSqPrior,
+                            numEpochs = numEpochs,
+                            numDiscard = numDiscard,
+                            numChains = numChains)
 ```
 
 ### Fit the same model in Stan
@@ -228,15 +228,15 @@ funMod <- function() {
   lambdaSqPrior <- 1.0
   regVarPrior <- 1.0
   
-  res <- linRegGibbsSampler(X = X,
-                            testX = testX,
-                            Y = output,
-                            testY = output,
-                            regVarPrior = regVarPrior,
-                            lambdaSqPrior = lambdaSqPrior,
-                            numEpochs = numEpochs,
-                            numDiscard = numDiscard,
-                            numChains = numChains)
+  res <- linRegGibbsProcessed(X = X,
+                              testX = testX,
+                              Y = output,
+                              testY = output,
+                              regVarPrior = regVarPrior,
+                              lambdaSqPrior = lambdaSqPrior,
+                              numEpochs = numEpochs,
+                              numDiscard = numDiscard,
+                              numChains = numChains)
   paramIntercept <- as.numeric(res$postMeanList$intercept)
   return(paramIntercept)
 }

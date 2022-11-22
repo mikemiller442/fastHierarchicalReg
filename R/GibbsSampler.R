@@ -141,9 +141,9 @@ Rhat <- function(samples,numChains) {
 #' @param numDiscard Number of epochs to throw away as burn in
 #' @param numChains Number of MCMC chains to run
 #' @return List of posterior samples, posterior means, and Rhat criteria
-linRegGibbsSampler <- function(X,testX,Y,testY,
-                               regVarPrior,lambdaSqPrior,
-                               numEpochs,numDiscard,numChains) {
+linRegGibbsProcessed <- function(X,testX,Y,testY,
+                                 regVarPrior,lambdaSqPrior,
+                                 numEpochs,numDiscard,numChains) {
 
   library(parallel)
   library(foreach)

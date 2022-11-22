@@ -15,20 +15,20 @@ intervals to perform inference without having to perform CV for the
 regularization parameter in addition to calculating bootstrapped
 confidence intervals.
 
-The primary benchmark used in this package is HLM presented in the
+The primary benchmark used in this package is the HLM presented in the
 fastBayesReg repository hosted by KangJian2016. The speed of these
 implementations follows in part from pre-computing the SVD of the design
 matrix to obtain sufficient statistics for the conditional posterior
 distributions. This allows us to reduce the time complexity of each
 iteration to $O(p^2)$ in the number of model covariates rather than
-$O(n^3)$ required for the matrix inversion in the naive blocked Gibbs
+$O(p^3)$ required for the matrix inversion in the naive blocked Gibbs
 sampler. Implementing the blocked Gibbs sampler is critical because it
 drastically reduces the random walk behavior that Gibbs sampling
-exhibits for high dimensional problems. The functionality of this
-package includes:
+exhibits for high dimensional posterior distributions. The functionality
+of this package includes:
 
 - Parallel computing of the Markov chains using the foreach package
-- Efficient Gibbs sampler implementation in R
+- Efficient Blocked Gibbs sampler implementation in R
 - Calculation of Rhat convergence diagnostics for model parameters
 
 ## Installation
@@ -41,6 +41,7 @@ devtools::install_github("mikemiller442/fastHierarchicalReg")
 ## Usage
 
 ``` r
+# Simulate data
 n <- 10000
 numBeta <- 5
 betaSD <- 0.75
@@ -67,7 +68,7 @@ numChains <- 4
 lambdaSqPrior <- 1.0
 regVarPrior <- 1.0
 
-# Call C++ Function Directly For A Single Chain
+# Call Gibbs Sampler Directly For A Single Chain
 res <- fastHierarchicalReg::linRegGibbs(X = X,
                                         testX = testX,
                                         Y = resp,
@@ -76,7 +77,7 @@ res <- fastHierarchicalReg::linRegGibbs(X = X,
                                         regVarPrior = regVarPrior,
                                         lambdaSqPrior = lambdaSqPrior)
 
-# Call R Function To Parallel Compute Multiple Chains Using Foreach
+# Call R Function To Compute Multiple Chains In Parallel
 res <- fastHierarchicalReg::linRegGibbsSampler(X = X,
                                                testX = testX,
                                                Y = resp,
@@ -91,6 +92,7 @@ res <- fastHierarchicalReg::linRegGibbsSampler(X = X,
     ## socket cluster with 15 nodes on host 'localhost'
 
 ``` r
+# Compare true beta values to the posterior means
 resDF <- data.frame(betaTrue = beta,
                     betaHat = res$postMeanList$beta)
 knitr::kable(resDF)
@@ -98,8 +100,8 @@ knitr::kable(resDF)
 
 |   betaTrue |    betaHat |
 |-----------:|-----------:|
-|  0.4383008 |  0.4324272 |
-| -2.7539479 | -2.7291278 |
-| -0.6450843 | -0.6562668 |
-| -0.8626593 | -0.8390581 |
-| -1.4305159 | -1.4016366 |
+| -3.4491918 | -3.4421431 |
+| -1.3283198 | -1.3133284 |
+| -0.2653254 | -0.2608867 |
+|  2.5677206 |  2.6069016 |
+|  1.3268278 |  1.3802128 |
