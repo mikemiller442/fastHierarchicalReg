@@ -57,24 +57,24 @@ lambdaSqPrior <- 1.0
 regVarPrior <- 1.0
 
 # Call C++ Function Directly For A Single Chain
-res <- linRegGibbs(X = X,
-                   testX = testX,
-                   Y = resp,
-                   testY = testResp,
-                   numEpochs = numEpochs,
-                   regVarPrior = regVarPrior,
-                   lambdaSqPrior = lambdaSqPrior)
+res <- fastHierarchicalReg::linRegGibbs(X = X,
+                                        testX = testX,
+                                        Y = resp,
+                                        testY = testResp,
+                                        numEpochs = numEpochs,
+                                        regVarPrior = regVarPrior,
+                                        lambdaSqPrior = lambdaSqPrior)
 
 # Call R Function To Parallel Compute Multiple Chains Using Foreach
-res <- linRegGibbsSampler(X = X,
-                          testX = testX,
-                          Y = resp,
-                          testY = testResp,
-                          regVarPrior = regVarPrior,
-                          lambdaSqPrior = lambdaSqPrior,
-                          numEpochs = numEpochs,
-                          numDiscard = numDiscard,
-                          numChains = numChains)
+res <- fastHierarchicalReg::linRegGibbsSampler(X = X,
+                                               testX = testX,
+                                               Y = resp,
+                                               testY = testResp,
+                                               regVarPrior = regVarPrior,
+                                               lambdaSqPrior = lambdaSqPrior,
+                                               numEpochs = numEpochs,
+                                               numDiscard = numDiscard,
+                                               numChains = numChains)
 ```
 
 

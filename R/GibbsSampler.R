@@ -47,21 +47,21 @@ linRegGibbs <- function(X,testX,Y,testY,numEpochs,regVarPrior,lambdaSqPrior) {
   for (epoch in 1:(numEpochs)) {
     # Sample regression coefficients
     Zdiag <- (1.0/regVar[epoch]*D^2.0 + (1.0/regVar[epoch])*(1.0/lambdaSq[epoch]))^(-1.0)
-    evBeta <- (1.0/mod.regVar[epoch])*(V %*% (diag(Zdiag) %*% (tV %*% (t(X) %*% Y))))
+    evBeta <- (1.0/regVar[epoch])*(V %*% (diag(Zdiag) %*% (tV %*% (t(X) %*% Y))))
     beta[,epoch+1] <- evBeta + V %*% (sqrt(Zdiag) * rnorm(numWeights))
 
     # Sample global shrinkage parameter
     lambdaSqScaleAlpha <- 1.0
     lambdaSqScaleBeta <- 1.0/lambdaSq[epoch] + lambdaSqPrior^(-2.0)
     lambdaSqScale[epoch + 1] <- 1.0/rgamma(1,lambdaSqScaleAlpha,lambdaSqScaleBeta)
-    mod.featHP.lambdaSqAlpha <- 0.5*(numWeights + 1.0)
-    mod.featHP.lambdaSqBeta <- 0.5*(1.0/mod.regVar[epoch])*sum(beta.col[,epoch+1] * beta.col[,epoch+1]) + (1.0/lambdaSqScale[epoch+1])
+    lambdaSqAlpha <- 0.5*(numWeights + 1.0)
+    lambdaSqBeta <- 0.5*(1.0/regVar[epoch])*sum(beta.col[,epoch+1] * beta.col[,epoch+1]) + (1.0/lambdaSqScale[epoch+1])
     lambdaSq[epoch + 1] <- 1.0/rgamma(1,lambdaSqAlpha,lambdaSqBeta)
 
     # Sample regression variance
-    trainResiduals <- mod.Y - features %*% beta.col[,epoch + 1]
+    trainResiduals <- Y - features %*% beta.col[,epoch + 1]
     regVarScaleAlpha <- 1.0
-    regVarScaleBeta <- 1.0/mod.regVar[epoch] + regVarPrior^(-2.0)
+    regVarScaleBeta <- 1.0/regVar[epoch] + regVarPrior^(-2.0)
     regVarScale[epoch + 1] <- 1.0/rgamma(1,regVarScaleAlpha,regVarScaleBeta)
     regVarAlpha <- 0.5*(n + numWeights + 1.0)
     regVarBeta <- 1.0/regVarScale[epoch+1] + 0.5*sum(trainResiduals*trainResiduals) + 0.5*(1.0/lambdaSq[epoch+1])*sum(beta[,epoch+1] * beta[,epoch+1])
