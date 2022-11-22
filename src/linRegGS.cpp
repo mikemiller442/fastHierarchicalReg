@@ -16,7 +16,7 @@ public:
   int numWeights;
   int numEpochs;
   double interceptPrior;
-  
+
   void construct(int n, int testN, int ne) {
     features = arma::ones(n,1);
     testFeatures = arma::ones(testN,1);
@@ -48,7 +48,7 @@ public:
   double lambdaSqAlpha;
   double lambdaSqBeta;
   double lambdaSqPrior;
-  
+
   void construct(arma::Mat<double> X, arma::Mat<double> testX,
                  double lsp, int ne) {
     features = X;
@@ -87,7 +87,7 @@ public:
   double regVarPrior;
   FeatureSet feat;
   FeatureSetHP featHP;
-  
+
   void construct(arma::Mat<double> X, arma::Mat<double> testX,
                  arma::Col<double> resp, arma::Col<double> testResp, int ne,
                  double rvp, double lambdaSqPrior) {
@@ -109,18 +109,18 @@ public:
 // Linear Regression Gibbs Sampler
 Rcpp::List linRegGibbs(NumericMatrix X, NumericMatrix testX, NumericVector Y, NumericVector testY,
                        int numEpochs, double regVarPrior, double lambdaSqPrior) {
-  
+
   LinRegModel mod;
   mod.construct(as<arma::mat>(X), as<arma::mat>(testX),
                 as<arma::vec>(Y), as<arma::vec>(testY), numEpochs,
                 regVarPrior, lambdaSqPrior);
-  
+
   arma::Col<double> trainResiduals;
   arma::Col<double> evBeta;
   arma::Col<double> stdNormal;
-  
+
   for (int epoch = 0; epoch < numEpochs; epoch++) {
-    
+
     // Sample intercept
     trainResiduals = mod.Y - mod.feat.features*mod.feat.beta.col(epoch)
                    - mod.featHP.features*mod.featHP.beta.col(epoch);
@@ -130,7 +130,7 @@ Rcpp::List linRegGibbs(NumericMatrix X, NumericMatrix testX, NumericVector Y, Nu
     evBeta = mod.feat.covMat*(arma::trans(mod.feat.features)*
              (trainResiduals + mod.feat.features*mod.feat.beta.col(epoch)));
     mod.feat.beta.col(epoch + 1) = (arma::mvnrnd(evBeta,mod.feat.covMat));
-    
+
     // Sample regression coefficients
     trainResiduals = mod.Y - mod.feat.features*mod.feat.beta.col(epoch + 1)
                    - mod.featHP.features*mod.featHP.beta.col(epoch);
@@ -143,8 +143,8 @@ Rcpp::List linRegGibbs(NumericMatrix X, NumericMatrix testX, NumericVector Y, Nu
     stdNormal = arma::randn(mod.featHP.numWeights,arma::distr_param(0.0,1.0));
     mod.featHP.beta.col(epoch + 1) = evBeta + mod.featHP.V*
                                      (arma::pow(mod.featHP.Zdiag, 0.5) % stdNormal);
-    
-    // Sample global shrinkage parameters
+
+    // Sample global shrinkage parameter
     mod.featHP.lambdaSqScaleAlpha = 1.0;
     mod.featHP.lambdaSqScaleBeta = 1.0/mod.featHP.lambdaSq(epoch)
                                  + pow(mod.featHP.lambdaSqPrior, -2.0);
@@ -155,7 +155,7 @@ Rcpp::List linRegGibbs(NumericMatrix X, NumericMatrix testX, NumericVector Y, Nu
                               mod.featHP.beta.col(epoch+1)) + (1.0/mod.featHP.lambdaSqScale(epoch+1));
     mod.featHP.lambdaSq(epoch + 1) = 1.0/randg(arma::distr_param(mod.featHP.lambdaSqAlpha,
                                      1.0/mod.featHP.lambdaSqBeta));
-    
+
     // Sample regression variance
     trainResiduals = mod.Y - mod.feat.features*mod.feat.beta.col(epoch + 1)
                    - mod.featHP.features*mod.featHP.beta.col(epoch + 1);
@@ -169,7 +169,7 @@ Rcpp::List linRegGibbs(NumericMatrix X, NumericMatrix testX, NumericVector Y, Nu
                    *arma::dot(mod.featHP.beta.col(epoch+1),mod.featHP.beta.col(epoch+1));
     mod.regVar(epoch + 1) = 1.0/arma::randg(arma::distr_param(mod.regVarAlpha,1.0/mod.regVarBeta));
   }
-  
+
   return Rcpp::List::create(Named("intercept") = mod.feat.beta,
                             Named("coefBeta") = mod.featHP.beta,
                             Named("regVarScale") = mod.regVarScale,

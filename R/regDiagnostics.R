@@ -81,7 +81,7 @@ linRegGibbsSampler <- function(X,testX,Y,testY,
 
   ### Run Markov Chains In Parallel
   resMat <- foreach(k = 1:numChains, .combine = "cbind", .packages = c("Rcpp","RcppArmadillo")) %dopar% {
-    sourceCpp("linRegGS.cpp")
+    sourceCpp("./../src/linRegGS.cpp")
     res <- linRegGibbs(X = X,
                        testX = testX,
                        Y = Y,
@@ -102,6 +102,8 @@ linRegGibbsSampler <- function(X,testX,Y,testY,
     samples
   }
 
+  print("Finished sampling chains. Now calculating Rhat.")
+
   RhatIntercept <- Rhat(resMat[1,],numChains)
   RhatBeta <- rep(NA,ncol(X))
   for (i in 1:ncol(X)) {
@@ -119,10 +121,19 @@ linRegGibbsSampler <- function(X,testX,Y,testY,
                    RhatRegVar = RhatRegVar,
                    RhatRegVarScale = RhatRegVarScale)
 
+  postMean <- rowMeans(resMat[,(numDiscard+2):ncol(resMat)])
+  postMeanList <- list(intercept = as.numeric(postMean[1]),
+                       beta = as.numeric(postMean[2:(ncol(X)+1)]),
+                       lambdaSq = as.numeric(postMean[ncol(X)+2]),
+                       lambdaSqScale = as.numeric(postMean[ncol(X)+3]),
+                       regVar = as.numeric(postMean[ncol(X)+4]),
+                       regVarScale = as.numeric(postMean[ncol(X)+5]))
+
   return(list(resMat = resMat,
-              postMean = rowMeans(resMat[,(numDiscard+2):(numEpochs+1)]),
+              postMeanList = postMeanList,
               RhatList = RhatList))
 }
+
 
 
 
