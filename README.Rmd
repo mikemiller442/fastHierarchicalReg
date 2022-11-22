@@ -43,7 +43,7 @@ for (i in 1:ncol(Z)) {
 }
 
 y <- Z %*% beta + e
-output <- y - mean(y)
+output <- y
 
 X <- Z
 testX <- Z

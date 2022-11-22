@@ -1,7 +1,3 @@
-library(parallel)
-library(foreach)
-library(roxygen2)
-
 #' Linear Regression Gibbs Sampler
 #'
 #' Estimates the posterior distribution of a Hierarchical Linear Model.
@@ -148,6 +144,9 @@ Rhat <- function(samples,numChains) {
 linRegGibbsSampler <- function(X,testX,Y,testY,
                                regVarPrior,lambdaSqPrior,
                                numEpochs,numDiscard,numChains) {
+
+  library(parallel)
+  library(foreach)
 
   ### Parallel Setup
   n.cores <- parallel::detectCores() - 1
