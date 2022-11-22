@@ -76,7 +76,6 @@ linRegGibbs <- function(X,testX,Y,testY,numEpochs,regVarPrior,lambdaSqPrior) {
 #' @param samples The number of samples in each chain.
 #' @param numChains The number of chains.
 #' @return Vector Of Rhat Convergence Diagnostics For Model Parameters.
-#' @examples
 Rhat <- function(samples,numChains) {
   n <- length(samples)/numChains
   si2 <- rep(NA,numChains)
