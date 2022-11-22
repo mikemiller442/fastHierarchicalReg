@@ -8,6 +8,13 @@ Description: This package estimates a Bayesian linear regression model with a hi
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
+Depends: 
+    R
+Imports: 
+    Rcpp,
+    RcppArmadillo
 LinkingTo:
     Rcpp,
     RcppArmadillo
+VignetteBuilder: 
+    knitr
