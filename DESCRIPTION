@@ -1,6 +1,6 @@
 Package: fastHierarchicalReg
 Type: Package
-Title: Fast Estimation Of Hierarchical Linear Regression Models Using Parallel Computing And Rcpp
+Title: Fast Estimation Of Hierarchical Linear Regression Models Using Parallel Computing And Blocked Gibbs Sampling
 Version: 0.1.0
 Author: Michael Miller
 Maintainer: Michael Miller <rmmill@umich.edu>
@@ -8,8 +8,5 @@ Description: This package estimates a Bayesian linear regression model with a hi
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
-Imports: Rcpp
-Includes: Rcpp
-LinkingTo: Rcpp, RcppArmadillo
-Depends: Rcpp, RcppArmadillo, parallel, foreach, roxygen2, bench, devtools
+Depends: parallel, foreach, roxygen2, bench, devtools
 VignetteBuilder: knitr
