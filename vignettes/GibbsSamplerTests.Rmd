@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ### Load Libraries
 
-```{r}
+```{r, warning=FALSE}
 library(bench)
 library(devtools)
 
@@ -110,7 +110,7 @@ y <- Z %*% beta + e
 output <- y
 ```
 
-### Run Gibbs Sampler For Methods Packages
+### Benchmark Gibbs Sampler Against fastBayesReg Package For Accuracy
 
 ```{r}
 X <- Z
@@ -146,7 +146,7 @@ resKJ <- fastBayesReg::fast_normal_lm(y = resp,
                                       b_sigma = 0.1)
 ```
 
-### Compare regression coefficient posterior means between model output and Stan
+### Compare regression coefficient posterior means between model output and fastBayesReg
 
 ```{r}
 # Comparing posterior means
@@ -155,7 +155,7 @@ paramBeta <- as.numeric(res$postMeanList$beta)
 all.equal(kjBeta,paramBeta)
 ```
 
-### Benchmark High Dimensional Example
+### Benchmark High Dimensional Example For Speed
 
 ```{r}
 n <- 1000

@@ -198,6 +198,7 @@ linRegGibbsProcessed <- function(X,testX,Y,testY,
     samples
   }
 
+  # Calculate Rhat diagnostics
   RhatBeta <- rep(NA,ncol(X))
   for (i in 1:ncol(X)) {
     RhatBeta[i] <- Rhat(resMat[i,],numChains)
@@ -213,6 +214,7 @@ linRegGibbsProcessed <- function(X,testX,Y,testY,
                    RhatRegVar = RhatRegVar,
                    RhatRegVarScale = RhatRegVarScale)
 
+  # Calculate posterior means
   postMean <- rowMeans(resMat[,(numDiscard+2):ncol(resMat)])
   postMeanList <- list(beta = as.numeric(postMean[1:ncol(X)]),
                        lambdaSq = as.numeric(postMean[ncol(X)+1]),

@@ -20,6 +20,8 @@ The primary benchmark used in this package is the HLM presented in the fastBayes
 * Efficient Blocked Gibbs sampler implementation in R
 * Calculation of Rhat convergence diagnostics for model parameters
 
+You can call the Gibbs sampler directly via linRegGibbs to calculate only one Markov chain, or you can call the R function linRegGibbsProcessed to calculate multiple Markov chains in parallel. linRegGibbsProcessed will also calculate the Rhat convergence criteria and the posterior means. Examples are shown below. A comprehensive test of this package is shown in the GibbsSamplerTests vignette where these functions are benchmarked against the fastBayesReg package for both accuracy and speed.
+
 
 ## Installation
 
