@@ -179,13 +179,13 @@ linRegGibbsProcessed <- function(X,testX,Y,testY,
 
   ### Run Markov Chains In Parallel
   resMat <- foreach(k = 1:numChains, .combine = "cbind") %dopar% {
-    res <- linRegGibbs(X = X,
-                       testX = testX,
-                       Y = Y,
-                       testY = testY,
-                       numEpochs = numEpochs,
-                       regVarPrior = regVarPrior,
-                       lambdaSqPrior = lambdaSqPrior)
+    res <- fastHierarchicalReg::linRegGibbs(X = X,
+                                            testX = testX,
+                                            Y = Y,
+                                            testY = testY,
+                                            numEpochs = numEpochs,
+                                            regVarPrior = regVarPrior,
+                                            lambdaSqPrior = lambdaSqPrior)
 
     postBeta <- res$coefBeta[,(numDiscard+2):(numEpochs+1)]
     postLambdaSq <- res$lambdaSq[(numDiscard+2):(numEpochs+1)]

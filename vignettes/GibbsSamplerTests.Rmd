@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-devtools::check()
+library(knitr)
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
