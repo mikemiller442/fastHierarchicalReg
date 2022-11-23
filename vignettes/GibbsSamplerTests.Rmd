@@ -2,7 +2,7 @@
 title: "HW3"
 author: "Michael Miller"
 date: "2022-11-06"
-output: html_document
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
@@ -26,11 +26,11 @@ library(fastBayesReg)
 ### Simulate Data 1
 
 ```{r}
-n <- 10000
-numBeta <- 100
-betaSD <- 0.75
-XSD <- 0.5
-errorSD <- 2.0
+n <- 10000   # subjects
+numBeta <- 100   # covariates
+betaSD <- 0.75   # standard deviation of the randomly sampled covariates
+XSD <- 0.5   # standard deviation of the generated features
+errorSD <- 2.0   # regression standard deviation
 e <- rnorm(n, mean = 0, sd = errorSD)
 beta <- rnorm(numBeta, mean = 0, sd = betaSD*errorSD)
 Z <- matrix(NA, nrow = n, ncol = numBeta)
@@ -39,7 +39,7 @@ for (i in 1:ncol(Z)) {
 }
 
 y <- Z %*% beta + e
-output <- y - mean(y)
+output <- y
 ```
 
 ### Run Gibbs Sampler
@@ -59,8 +59,8 @@ regVarPrior <- 1.0
 
 res <- fastHierarchicalReg::linRegGibbsProcessed(X = X,
                                                  testX = testX,
-                                                 Y = output,
-                                                 testY = output,
+                                                 Y = resp,
+                                                 testY = testResp,
                                                  lambdaSqPrior = lambdaSqPrior,
                                                  regVarPrior = regVarPrior,
                                                  numEpochs = numEpochs,
@@ -69,7 +69,7 @@ res <- fastHierarchicalReg::linRegGibbsProcessed(X = X,
                                                  numCores = numCores)
 ```
 
-### Compare means between model output to true values
+### Compare means between model output and true values
 
 ```{r}
 # Comparing beta
@@ -107,7 +107,7 @@ for (i in 1:ncol(Z)) {
 }
 
 y <- Z %*% beta + e
-output <- y - mean(y)
+output <- y
 ```
 
 ### Run Gibbs Sampler For Methods Packages
@@ -126,8 +126,8 @@ regVarPrior <- 1.0
 
 res <- fastHierarchicalReg::linRegGibbsProcessed(X = X,
                                                  testX = testX,
-                                                 Y = output,
-                                                 testY = output,
+                                                 Y = resp,
+                                                 testY = testResp,
                                                  lambdaSqPrior = lambdaSqPrior,
                                                  regVarPrior = regVarPrior,
                                                  numEpochs = numEpochs,
@@ -138,7 +138,7 @@ res <- fastHierarchicalReg::linRegGibbsProcessed(X = X,
 numEpochs <- 10000
 numDiscard <- 2000
 
-resKJ <- fastBayesReg::fast_normal_lm(y = y,
+resKJ <- fastBayesReg::fast_normal_lm(y = resp,
                                       X = X,
                                       mcmc_sample = numEpochs,
                                       burnin = numDiscard,
@@ -158,7 +158,7 @@ all.equal(kjBeta,paramBeta)
 ### Benchmark High Dimensional Example
 
 ```{r}
-n <- 5000
+n <- 1000
 numBeta <- 500
 betaSD <- 0.05
 XSD <- 0.5
@@ -171,7 +171,7 @@ for (i in 1:ncol(Z)) {
 }
 
 y <- Z %*% beta + e
-output <- y - mean(y)
+output <- y
 
 funMod <- function() {
   X <- Z
@@ -192,20 +192,20 @@ funMod <- function() {
                                           regVarPrior = regVarPrior,
                                           lambdaSqPrior = lambdaSqPrior)
   postBeta <- res$coefBeta[,(numDiscard+2):(numEpochs+1)]
-  paramBeta <- rowMeans(postBeta)
+  paramBeta <- as.numeric(rowMeans(postBeta))
   return(paramBeta)
 }
 
 funKJ <- function() {
   numEpochs <- 4000
   numDiscard <- 2000
-  resKJ <- fastBayesReg::fast_normal_lm(y = y,
+  resKJ <- fastBayesReg::fast_normal_lm(y = resp,
                                         X = X,
                                         mcmc_sample = numEpochs,
                                         burnin = numDiscard,
                                         a_sigma = 0.1,
                                         b_sigma = 0.1)
-  kjBeta <- as.numeric(mean(model1[,1]))
+  kjBeta <- as.numeric(resKJ$post_mean$betacoef)
   return(kjBeta)
 }
 
