@@ -36,6 +36,7 @@ of this package includes:
 ``` r
 library(devtools)
 devtools::install_github("mikemiller442/fastHierarchicalReg")
+library(fastHierarchicalReg)
 ```
 
 ## Usage
@@ -65,6 +66,7 @@ testResp <- output
 numEpochs <- 10000
 numDiscard <- 2000
 numChains <- 4
+numCores <- 8
 lambdaSqPrior <- 1.0
 regVarPrior <- 1.0
 
@@ -82,14 +84,15 @@ res <- fastHierarchicalReg::linRegGibbsProcessed(X = X,
                                                  testX = testX,
                                                  Y = resp,
                                                  testY = testResp,
-                                                 regVarPrior = regVarPrior,
                                                  lambdaSqPrior = lambdaSqPrior,
+                                                 regVarPrior = regVarPrior,
                                                  numEpochs = numEpochs,
                                                  numDiscard = numDiscard,
-                                                 numChains = numChains)
+                                                 numChains = numChains,
+                                                 numCores = numCores)
 ```
 
-    ## socket cluster with 15 nodes on host 'localhost'
+    ## socket cluster with 8 nodes on host 'localhost'
 
 ``` r
 # Compare true beta values to the posterior means
@@ -100,8 +103,8 @@ knitr::kable(resDF)
 
 |   betaTrue |    betaHat |
 |-----------:|-----------:|
-| -0.5015187 | -0.4952341 |
-|  2.6450968 |  2.6266106 |
-|  1.1628592 |  1.1481380 |
-| -0.4703497 | -0.4305501 |
-|  1.2252963 |  1.2130184 |
+| -0.7649616 | -0.7434835 |
+|  2.4931658 |  2.4826799 |
+| -1.0504049 | -1.0951347 |
+|  0.1997914 |  0.1854623 |
+| -0.3859634 | -0.4449042 |
