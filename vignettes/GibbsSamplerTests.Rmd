@@ -83,6 +83,7 @@ all.equal(betaSD,paramLambda)
 paramSigma <- sqrt(as.numeric(res$postMeanList$regVar))
 all.equal(errorSD,paramSigma)
 ```
+
 ### Rhat Convergence Diagnostic - Check Convergence to 1.0
 
 ```{r}
