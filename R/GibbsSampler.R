@@ -39,7 +39,6 @@ linRegGibbs <- function(X,testX,Y,testY,regVarPrior,lambdaSqPrior,numEpochs) {
   lambdaSqScale[1] <- 1.0
   lambdaSq <- rep(0.0,numEpochs + 1)
   lambdaSq[1] <- 1.0/numWeights
-
   regVarScale <- rep(0.0,numEpochs + 1)
   regVarScale[1] <- 1.0
   regVar <- rep(0.0,numEpochs + 1)

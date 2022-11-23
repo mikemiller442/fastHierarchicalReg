@@ -25,6 +25,7 @@ The primary benchmark used in this package is the HLM presented in the fastBayes
 ```{r, eval = FALSE}
 library(devtools)
 devtools::install_github("mikemiller442/fastHierarchicalReg")
+library(fastHierarchicalReg)
 ```
 
 ## Usage

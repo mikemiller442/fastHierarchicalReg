@@ -12,16 +12,15 @@ knitr::opts_chunk$set(echo = TRUE)
 ### Load Libraries
 
 ```{r}
-library(parallel)
-library(foreach)
-library(roxygen2)
 library(bench)
-```
+library(devtools)
 
-```{r}
-source("./../R/GibbsSampler.R")
-```
+devtools::install_github("mikemiller442/fastHierarchicalReg")
+devtools::install_github("kangjian2016/fastBayesReg")
 
+library(fastHierarchicalReg)
+library(fastBayesReg)
+```
 
 ### Simulate Data 1
 
@@ -53,6 +52,7 @@ testResp <- output
 numEpochs <- 10000
 numDiscard <- 2000
 numChains <- 4
+numCores <- 8
 lambdaSqPrior <- 1.0
 regVarPrior <- 1.0
 
@@ -64,7 +64,8 @@ res <- linRegGibbsProcessed(X = X,
                             lambdaSqPrior = lambdaSqPrior,
                             numEpochs = numEpochs,
                             numDiscard = numDiscard,
-                            numChains = numChains)
+                            numChains = numChains,
+                            numCores = numCores)
 ```
 
 ### Compare means between model output to true values
@@ -102,7 +103,7 @@ y <- Z %*% beta + e
 output <- y - mean(y)
 ```
 
-### Run Gibbs Sampler
+### Run Gibbs Sampler For Methods Packages
 
 ```{r}
 X <- Z
@@ -110,7 +111,7 @@ testX <- Z
 resp <- output
 testResp <- output
 
-numEpochs <- 10000
+numEpochs <- 40000
 numDiscard <- 2000
 numChains <- 4
 lambdaSqPrior <- 1.0
@@ -124,49 +125,33 @@ res <- linRegGibbsProcessed(X = X,
                             lambdaSqPrior = lambdaSqPrior,
                             numEpochs = numEpochs,
                             numDiscard = numDiscard,
-                            numChains = numChains)
-```
+                            numChains = numChains,
+                            numCores = numCores)
 
-### Fit the same model in Stan
+numEpochs <- 10000
+numDiscard <- 2000
 
-```{r}
-# options(mc.cores = parallel::detectCores())
-# stanData <- list(N = nrow(X),
-#                  Y = as.numeric(output),
-#                  K = ncol(X),
-#                  X = X)
-# 
-# m1 <- stan(file = "./../m1.stan",
-#            data = stanData,
-#            warmup = 1000,
-#            iter = 5000,
-#            control = list(adapt_delta = 0.95),
-#            chains = 4, 
-#            cores = 8)
-# 
-# model1 <- data.matrix(m1)
+resKJ <- fastBayesReg::fast_normal_lm(y = y,
+                                      X = X,
+                                      mcmc_sample = numEpochs,
+                                      burnin = numDiscard)
 ```
 
 ### Compare means between model output and Stan
 
 ```{r}
-# Comparing intercept
-stanIntercept <- as.numeric(mean(model1[,1]))
-paramIntercept <- as.numeric(res$postMeanList$intercept)
-all.equal(stanIntercept,stanIntercept)
-
 # Comparing beta
-stanBeta <- as.numeric(colMeans(model1[,2:(ncol(X)+1)]))
+kjBeta <- as.numeric(resKJ$post_mean$betacoef)
 paramBeta <- as.numeric(res$postMeanList$beta)
 all.equal(stanBeta,paramBeta)
 
 # Comparing lambda
-stanLambda <- as.numeric(mean(model1[,ncol(X)+2]))
+kjLambda <- as.numeric(resKJ$post_mean$tau2)
 paramLambda <- sqrt(as.numeric(res$postMeanList$lambdaSq))
 all.equal(stanLambda,paramLambda)
 
 # Comparing sigma
-stanSigma <- as.numeric(mean(model1[,ncol(X)+3]))
+kjSigma <- as.numeric(resKJ$post_mean$sigma2_eps)
 paramSigma <- sqrt(as.numeric(res$postMeanList$regVar))
 all.equal(stanSigma,paramSigma)
 ```
@@ -174,9 +159,9 @@ all.equal(stanSigma,paramSigma)
 ### Compare covariance between model output and Stan
 
 ```{r}
-# Comparing intercept + beta
-stanBetaCov <- as.numeric(cov(model1[,1:(ncol(X)+1)]))
-paramBetaCov <- as.numeric(cov(t(res$resMat[1:(ncol(X)+1),])))
+# Comparing beta
+stanBetaCov <- as.numeric(cov(model1[,1:(ncol(X))]))
+paramBetaCov <- as.numeric(cov(t(res$resMat[1:(ncol(X)),])))
 all.equal(stanBetaCov,paramBetaCov)
 
 # Comparing lambda
@@ -241,35 +226,35 @@ funMod <- function() {
   return(paramIntercept)
 }
 
-# funStan <- function() {
-#   options(mc.cores = parallel::detectCores())
-#   
-#   X <- Z
-#   testX <- Z
-#   stanData <- list(N = nrow(X),
-#                    Y = as.numeric(output),
-#                    K = ncol(X),
-#                    X = X)
-#   
-#   m1 <- stan(file = "./../m1.stan",
-#              data = stanData,
-#              warmup = 1000, 
-#              iter = 2000,
-#              control = list(adapt_delta = 0.95),
-#              chains = 2,
-#              cores = 8)
-#   
-#   model1 <- data.matrix(m1)
-#   stanIntercept <- as.numeric(mean(model1[,1]))
-#   return(stanIntercept)
-# }
-# 
-# benchMarkRes <- bench::mark(funMod(),
-#                             funStan(),
-#                             iterations = 2,
-#                             check = FALSE)
-# benchMarkTable <- benchMarkRes[c("expression", "min", "median","mem_alloc","n_gc")]
-# knitr::kable(benchMarkTable)
+funStan <- function() {
+  options(mc.cores = parallel::detectCores())
+
+  X <- Z
+  testX <- Z
+  stanData <- list(N = nrow(X),
+                   Y = as.numeric(output),
+                   K = ncol(X),
+                   X = X)
+
+  m1 <- stan(file = "./../m1.stan",
+             data = stanData,
+             warmup = 1000,
+             iter = 2000,
+             control = list(adapt_delta = 0.95),
+             chains = 2,
+             cores = 8)
+
+  model1 <- data.matrix(m1)
+  stanIntercept <- as.numeric(mean(model1[,1]))
+  return(stanIntercept)
+}
+
+benchMarkRes <- bench::mark(funMod(),
+                            funStan(),
+                            iterations = 2,
+                            check = FALSE)
+benchMarkTable <- benchMarkRes[c("expression", "min", "median","mem_alloc","n_gc")]
+knitr::kable(benchMarkTable)
 ```
 
 
