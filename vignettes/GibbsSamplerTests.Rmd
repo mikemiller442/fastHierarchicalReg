@@ -2,7 +2,7 @@
 title: "HW3"
 author: "Michael Miller"
 date: "2022-11-06"
-output: github_document
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
