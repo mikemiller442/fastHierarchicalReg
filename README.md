@@ -43,11 +43,12 @@ library(fastHierarchicalReg)
 
 ``` r
 # Simulate data
-n <- 10000
-numBeta <- 5
-betaSD <- 0.75
-XSD <- 0.5
-errorSD <- 2.0
+n <- 10000   # subjects
+numBeta <- 5   # covariates
+betaSD <- 0.75   # standard deviation of the randomly sampled covariates
+XSD <- 0.5   # standard deviation of the generated features
+errorSD <- 2.0   # regression standard deviation
+
 e <- rnorm(n, mean = 0, sd = errorSD)
 beta <- rnorm(numBeta, mean = 0, sd = betaSD*errorSD)
 Z <- matrix(NA, nrow = n, ncol = numBeta)
@@ -103,8 +104,8 @@ knitr::kable(resDF)
 
 |   betaTrue |    betaHat |
 |-----------:|-----------:|
-| -0.7649616 | -0.7434835 |
-|  2.4931658 |  2.4826799 |
-| -1.0504049 | -1.0951347 |
-|  0.1997914 |  0.1854623 |
-| -0.3859634 | -0.4449042 |
+| -1.2124422 | -1.2235755 |
+|  0.4166135 |  0.4690173 |
+|  2.3911720 |  2.3808407 |
+| -0.7461658 | -0.7664415 |
+| -1.4909645 | -1.4654161 |

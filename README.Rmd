@@ -33,11 +33,12 @@ library(fastHierarchicalReg)
 
 ```{r, message = FALSE}
 # Simulate data
-n <- 10000
-numBeta <- 5
-betaSD <- 0.75
-XSD <- 0.5
-errorSD <- 2.0
+n <- 10000   # subjects
+numBeta <- 5   # covariates
+betaSD <- 0.75   # standard deviation of the randomly sampled covariates
+XSD <- 0.5   # standard deviation of the generated features
+errorSD <- 2.0   # regression standard deviation
+
 e <- rnorm(n, mean = 0, sd = errorSD)
 beta <- rnorm(numBeta, mean = 0, sd = betaSD*errorSD)
 Z <- matrix(NA, nrow = n, ncol = numBeta)
