@@ -20,6 +20,7 @@
 #' \item{regVarScale}{vector of posterior samples for the auxiliary scale variable for the regression variance}
 #' \item{regVar}{vector of posterior samples for the regression variance}
 #' }
+#' @export
 linRegGibbs <- function(X,testX,Y,testY,regVarPrior,lambdaSqPrior,numEpochs) {
 
   # Initialize Markov Chain And Compute Sufficient Statistics
@@ -81,6 +82,7 @@ linRegGibbs <- function(X,testX,Y,testY,regVarPrior,lambdaSqPrior,numEpochs) {
 #' @param samples The number of samples in each chain.
 #' @param numChains The number of chains.
 #' @return Rhat Convergence Diagnostics For A Single Model Parameter.
+#' @export
 Rhat <- function(samples,numChains) {
   n <- length(samples)/numChains
   si2 <- rep(NA,numChains)
@@ -150,6 +152,7 @@ Rhat <- function(samples,numChains) {
 #' \item{postMeanList}{vector of posterior means}
 #' \item{RhatList}{vector of Rhat diagnostics}
 #' }
+#' @export
 linRegGibbsProcessed <- function(X,testX,Y,testY,
                                  lambdaSqPrior,regVarPrior,
                                  numEpochs,numDiscard,numChains,numCores) {
