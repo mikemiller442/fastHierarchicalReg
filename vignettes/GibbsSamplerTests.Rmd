@@ -56,16 +56,16 @@ numCores <- 8
 lambdaSqPrior <- 1.0
 regVarPrior <- 1.0
 
-res <- linRegGibbsProcessed(X = X,
-                            testX = testX,
-                            Y = output,
-                            testY = output,
-                            regVarPrior = regVarPrior,
-                            lambdaSqPrior = lambdaSqPrior,
-                            numEpochs = numEpochs,
-                            numDiscard = numDiscard,
-                            numChains = numChains,
-                            numCores = numCores)
+res <- fastHierarchicalReg::linRegGibbsProcessed(X = X,
+                                                 testX = testX,
+                                                 Y = output,
+                                                 testY = output,
+                                                 regVarPrior = regVarPrior,
+                                                 lambdaSqPrior = lambdaSqPrior,
+                                                 numEpochs = numEpochs,
+                                                 numDiscard = numDiscard,
+                                                 numChains = numChains,
+                                                 numCores = numCores)
 ```
 
 ### Compare means between model output to true values
@@ -82,6 +82,11 @@ all.equal(betaSD,paramLambda)
 # Comparing sigma
 paramSigma <- sqrt(as.numeric(res$postMeanList$regVar))
 all.equal(errorSD,paramSigma)
+```
+### Rhat Convergence Diagnostic - Check Convergence to 1.0
+
+```{r}
+all.equal(as.numeric(unlist(res$RhatList)),rep(1.0,length(unlist(res$RhatList))))
 ```
 
 ### Simulate Data 2
@@ -111,22 +116,22 @@ testX <- Z
 resp <- output
 testResp <- output
 
-numEpochs <- 40000
+numEpochs <- 4000
 numDiscard <- 2000
 numChains <- 4
 lambdaSqPrior <- 1.0
 regVarPrior <- 1.0
 
-res <- linRegGibbsProcessed(X = X,
-                            testX = testX,
-                            Y = output,
-                            testY = output,
-                            regVarPrior = regVarPrior,
-                            lambdaSqPrior = lambdaSqPrior,
-                            numEpochs = numEpochs,
-                            numDiscard = numDiscard,
-                            numChains = numChains,
-                            numCores = numCores)
+res <- fastHierarchicalReg::linRegGibbsProcessed(X = X,
+                                                 testX = testX,
+                                                 Y = output,
+                                                 testY = output,
+                                                 regVarPrior = regVarPrior,
+                                                 lambdaSqPrior = lambdaSqPrior,
+                                                 numEpochs = numEpochs,
+                                                 numDiscard = numDiscard,
+                                                 numChains = numChains,
+                                                 numCores = numCores)
 
 numEpochs <- 10000
 numDiscard <- 2000
@@ -134,54 +139,19 @@ numDiscard <- 2000
 resKJ <- fastBayesReg::fast_normal_lm(y = y,
                                       X = X,
                                       mcmc_sample = numEpochs,
-                                      burnin = numDiscard)
+                                      burnin = numDiscard,
+                                      a_sigma = 0.1,
+                                      b_sigma = 0.1)
 ```
 
-### Compare means between model output and Stan
+### Compare regression coefficient posterior means between model output and Stan
 
 ```{r}
-# Comparing beta
+# Comparing posterior means
 kjBeta <- as.numeric(resKJ$post_mean$betacoef)
 paramBeta <- as.numeric(res$postMeanList$beta)
-all.equal(stanBeta,paramBeta)
-
-# Comparing lambda
-kjLambda <- as.numeric(resKJ$post_mean$tau2)
-paramLambda <- sqrt(as.numeric(res$postMeanList$lambdaSq))
-all.equal(stanLambda,paramLambda)
-
-# Comparing sigma
-kjSigma <- as.numeric(resKJ$post_mean$sigma2_eps)
-paramSigma <- sqrt(as.numeric(res$postMeanList$regVar))
-all.equal(stanSigma,paramSigma)
+all.equal(kjBeta,paramBeta)
 ```
-
-### Compare covariance between model output and Stan
-
-```{r}
-# Comparing beta
-stanBetaCov <- as.numeric(cov(model1[,1:(ncol(X))]))
-paramBetaCov <- as.numeric(cov(t(res$resMat[1:(ncol(X)),])))
-all.equal(stanBetaCov,paramBetaCov)
-
-# Comparing lambda
-stanLambdaCov <- as.numeric(var(model1[,ncol(X)+2]))
-paramLambdaCov <- as.numeric(var(sqrt(res$resMat[ncol(X)+2,])))
-all.equal(stanLambdaCov,paramLambdaCov)
-
-# Comparing sigma
-stanSigmaCov <- as.numeric(var(model1[,ncol(X)+3]))
-paramSigmaCov <- as.numeric(var(sqrt(res$resMat[ncol(X)+4,])))
-all.equal(stanSigmaCov,paramSigmaCov)
-```
-
-### Rhat Convergence Diagnostic - Check Convergence to 1.0
-
-```{r}
-print(unlist(res$RhatList))
-all.equal(as.numeric(unlist(res$RhatList)),rep(1.0,length(unlist(res$RhatList))))
-```
-
 
 ### Benchmark High Dimensional Example
 
@@ -209,48 +179,36 @@ funMod <- function() {
   
   numEpochs <- 4000
   numDiscard <- 2000
-  numChains <- 2
   lambdaSqPrior <- 1.0
   regVarPrior <- 1.0
   
-  res <- linRegGibbsProcessed(X = X,
-                              testX = testX,
-                              Y = output,
-                              testY = output,
-                              regVarPrior = regVarPrior,
-                              lambdaSqPrior = lambdaSqPrior,
-                              numEpochs = numEpochs,
-                              numDiscard = numDiscard,
-                              numChains = numChains)
-  paramIntercept <- as.numeric(res$postMeanList$intercept)
-  return(paramIntercept)
+  res <- fastHierarchicalReg::linRegGibbs(X = X,
+                                          testX = testX,
+                                          Y = resp,
+                                          testY = testResp,
+                                          numEpochs = numEpochs,
+                                          regVarPrior = regVarPrior,
+                                          lambdaSqPrior = lambdaSqPrior)
+  postBeta <- res$coefBeta[,(numDiscard+2):(numEpochs+1)]
+  paramBeta <- rowMeans(postBeta)
+  return(paramBeta)
 }
 
-funStan <- function() {
-  options(mc.cores = parallel::detectCores())
-
-  X <- Z
-  testX <- Z
-  stanData <- list(N = nrow(X),
-                   Y = as.numeric(output),
-                   K = ncol(X),
-                   X = X)
-
-  m1 <- stan(file = "./../m1.stan",
-             data = stanData,
-             warmup = 1000,
-             iter = 2000,
-             control = list(adapt_delta = 0.95),
-             chains = 2,
-             cores = 8)
-
-  model1 <- data.matrix(m1)
-  stanIntercept <- as.numeric(mean(model1[,1]))
-  return(stanIntercept)
+funKJ <- function() {
+  numEpochs <- 4000
+  numDiscard <- 2000
+  resKJ <- fastBayesReg::fast_normal_lm(y = y,
+                                        X = X,
+                                        mcmc_sample = numEpochs,
+                                        burnin = numDiscard,
+                                        a_sigma = 0.1,
+                                        b_sigma = 0.1)
+  kjBeta <- as.numeric(mean(model1[,1]))
+  return(kjBeta)
 }
 
 benchMarkRes <- bench::mark(funMod(),
-                            funStan(),
+                            funKJ(),
                             iterations = 2,
                             check = FALSE)
 benchMarkTable <- benchMarkRes[c("expression", "min", "median","mem_alloc","n_gc")]
